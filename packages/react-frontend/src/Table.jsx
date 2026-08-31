@@ -1,7 +1,12 @@
-import React from "react";
-
 function TableHeader() {
-  return <tbody />;
+  return (
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Job</th>
+      </tr>
+    </thead>
+  );
 }
 
 function TableBody(props) {
@@ -15,13 +20,9 @@ function TableBody(props) {
         </td>
       </tr>
     );
-   }
-  );
-  return (
-      <tbody>
-        {rows}
-       </tbody>
-   );
+  });
+
+  return <tbody>{rows}</tbody>;
 }
 
 function Table(props) {
