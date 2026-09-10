@@ -9,9 +9,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run dev -w react-frontend"
-  }
-  ,
+  },
   "workspaces": [
-  "packages/*"
-  ]
+    "packages/*"
+  ],
+  "dependencies": {
+    "cors": "^2.8.6"
+  }
 }
