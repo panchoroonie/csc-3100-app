@@ -52,6 +52,16 @@ const findUserByNameAndJob = (name, job) => {
 const findUserById = (id) =>
   users["users_list"].find((user) => user["id"] === id);
 
+const generateId = () => {
+  let id;
+
+  do {
+    id = Math.random().toString(36).slice(2, 8);
+  } while (findUserById(id));
+
+  return id;
+};
+
 app.get("/users/:id", (req, res) => {
   const id = req.params["id"]; //or req.params.id
   let result = findUserById(id);
@@ -63,9 +73,9 @@ app.get("/users/:id", (req, res) => {
 });
 
 const addUser = (user) => {
-  user.id = Math.random();
-  users["users_list"].push(user);
-  return user;
+  const newUser = { ...user, id: generateId() };
+  users["users_list"].push(newUser);
+  return newUser;
 };
 
 app.post("/users", (req, res) => {
@@ -74,14 +84,18 @@ app.post("/users", (req, res) => {
   res.status(201).send(newUser);
 });
 
-const deleteUser = (user) =>{
-  users["users_list"].pop(user);
-};
+app.delete("/users/:id", (req, res) => {
+  const userIndex = users["users_list"].findIndex(
+    (user) => user["id"] === req.params.id,
+  );
 
-app.delete("/users", (req, res) => {
-  const userToDelete = req.body
-  deleteUser(userToDelete);
-  res.send();
+  if (userIndex === -1) {
+    res.status(404).send("Resource not found.");
+    return;
+  }
+
+  users["users_list"].splice(userIndex, 1);
+  res.status(204).send();
 });
 
 app.get("/users", (req, res) => {
