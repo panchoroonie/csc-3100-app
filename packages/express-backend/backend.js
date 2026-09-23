@@ -1,38 +1,9 @@
 import express from "express";
 import cors from "cors";
+import userService from "./services/user-service.js";
 
 const app = express();
 const port = 8000;
-
-const users = {
-  users_list: [
-    {
-      id: "xyz789",
-      name: "Charlie",
-      job: "Janitor",
-    },
-    {
-      id: "abc123",
-      name: "Mac",
-      job: "Bouncer",
-    },
-    {
-      id: "ppp222",
-      name: "Mac",
-      job: "Professor",
-    },
-    {
-      id: "yat999",
-      name: "Dee",
-      job: "Aspring actress",
-    },
-    {
-      id: "zap555",
-      name: "Dennis",
-      job: "Bartender",
-    },
-  ],
-};
 
 app.use(cors());
 app.use(express.json());
@@ -41,72 +12,56 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const findUserByName = (name) => {
-  return users["users_list"].filter((user) => user["name"] === name);
-};
-
-const findUserByNameAndJob = (name, job) => {
-  return users["users_list"].filter((user) => user["name"] === name && user["job"] === job);
-};
-
-const findUserById = (id) =>
-  users["users_list"].find((user) => user["id"] === id);
-
-const generateId = () => {
-  let id;
-
-  do {
-    id = Math.random().toString(36).slice(2, 8);
-  } while (findUserById(id));
-
-  return id;
-};
-
-app.get("/users/:id", (req, res) => {
-  const id = req.params["id"]; //or req.params.id
-  let result = findUserById(id);
-  if (result === undefined) {
-    res.status(404).send("Resource not found.");
-  } else {
-    res.send(result);
+app.get("/users/:id", async (req, res) => {
+  try {
+    const user = await userService.findUserById(req.params.id);
+    return user === null
+      ? res.status(404).send("Resource not found.")
+      : res.send(user);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).send("Resource not found.");
+    }
+    console.error(error);
+    return res.status(500).send("Unable to retrieve user.");
   }
 });
 
-const addUser = (user) => {
-  const newUser = { ...user, id: generateId() };
-  users["users_list"].push(newUser);
-  return newUser;
-};
-
-app.post("/users", (req, res) => {
-  const userToAdd = req.body;
-  const newUser = addUser(userToAdd);
-  res.status(201).send(newUser);
-});
-
-app.delete("/users/:id", (req, res) => {
-  const userIndex = users["users_list"].findIndex(
-    (user) => user["id"] === req.params.id,
-  );
-
-  if (userIndex === -1) {
-    res.status(404).send("Resource not found.");
-    return;
+app.post("/users", async (req, res) => {
+  try {
+    const newUser = await userService.addUser(req.body);
+    return res.status(201).send(newUser);
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).send(error.message);
+    }
+    console.error(error);
+    return res.status(500).send("Unable to add user.");
   }
-
-  users["users_list"].splice(userIndex, 1);
-  res.status(204).send();
 });
 
-app.get("/users", (req, res) => {
-  const name = req.query.name;
-  const job = req.query.name;
-  if (name != undefined) {
-    let result = job ? findUserByName(name, job) : findUserByName(name);
-    result = { users_list: result };
-    res.send(result);
-  } else {
-    res.send(users);
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const removedUser = await userService.removeUser(req.params.id);
+    return removedUser === null
+      ? res.status(404).send("Resource not found.")
+      : res.status(204).send();
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).send("Resource not found.");
+    }
+    console.error(error);
+    return res.status(500).send("Unable to remove user.");
+  }
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const users = await userService.getUsers(req.query.name, req.query.job);
+    return res.send({ users_list: users });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Unable to retrieve users.");
   }
 });
 
