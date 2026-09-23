@@ -8,14 +8,14 @@ function MyApp() {
   function removeOneCharacter(index) {
     const characterToDelete = characters[index];
 
-    fetch(`http://localhost:8000/users/${characterToDelete.id}`, {
+    fetch(`http://localhost:8000/users/${characterToDelete._id}`, {
       method: "DELETE",
     })
       .then((response) => {
         if (response.status === 204) {
           setCharacters((currentCharacters) =>
             currentCharacters.filter(
-              (character) => character.id !== characterToDelete.id,
+              (character) => character._id !== characterToDelete._id,
             ),
           );
         } else {
